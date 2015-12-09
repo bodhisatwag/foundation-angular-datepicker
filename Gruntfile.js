@@ -22,7 +22,7 @@ module.exports = function (grunt) {
           outputStyle: 'compressed'
         },
         files: {
-          'dist/bzm-date-picker.css': ['src/scss/app.scss']
+          'dist/angular-foundation-datepicker.css': ['src/scss/app.scss']
         }
       }
     },
@@ -34,7 +34,7 @@ module.exports = function (grunt) {
       },
       target: {
         files: {
-          'dist/bzm-date-picker.min.js': ['src/js/*.js']
+          'dist/angular-foundation-datepicker-min.js': ['src/js/*.js']
         }
       }
     },
