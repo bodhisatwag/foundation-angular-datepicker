@@ -21,8 +21,8 @@ function bzmDatePicker ($log, $document, $filter) {
             placeholder: "Select Date"
         },
         fr: {
-            months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
-            monthsShort: ["Jan", "Fev", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Dec"],
+            months: ["Janvier", "FÃƒÂ©vrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "AoÃƒÂ»t", "Septembre", "Octobre", "Novembre", "DÃƒÂ©cembre"],
+            monthsShort: ["Jan", "Fev", "Mar", "Avr", "Mai", "Jun", "Jul", "AoÃƒÂ»", "Sep", "Oct", "Nov", "Dec"],
             today: "Aujourd'hui",
             placeholder: "Date Selection"
         },
@@ -52,21 +52,22 @@ function bzmDatePicker ($log, $document, $filter) {
         '</tr>'+
         '</thead>',
         contTemplate: '<tbody><tr><td colspan="7"></td></tr></tbody>',
-        footTemplate: '<tfoot ng-show="todayButton"><tr><th colspan="7" class="today">{{todayButton}}</th></tr></tfoot>',
+        footTemplate: '<tfoot ng-show="todayButton"><tr><th colspan="3" class="today">{{todayButton}}</th><th></th><th colspan="3" class="reset resetDatePickerValue">Reset</th></tr></tfoot>',
         headTemplateDays: '<thead>'+
         '<tr>'+
         '<th class="prev"><i class="fa fa-chevron-left fi-arrow-left"/></th>'+
         '<th colspan="5" class="date-switch"></th>'+
         '<th class="next"><i class="fa fa-chevron-right fi-arrow-right"/></th>'+
         '</tr>'+
+        '<tr class="days"><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>'+
         '</thead>',
-        footTemplateDays: '<tfoot class="picker {{todayClass}}" ng-show="todayButton"><tr><th colspan="7" class="today">{{todayButton}}</th></tr></tfoot>'
+        footTemplateDays: '<tfoot class="picker {{todayClass}}" ng-show="todayButton"><tr><th colspan="3" class="today">{{todayButton}}</th><th></th><th colspan="3" class="reset">Reset</th></tr></tfoot>'
     };
 
     var template = '<div class="bzm-date-picker"> ' +
         '<div ng-click="displayPicker()" class="date-display">' +
         '<label for={{pickerid}} class="date-input-label"></label>' +
-        '<input readonly id={{pickerid}} class="date-input" placeholder="{{placeholder}}" value="{{modelviewvalue}}">' +
+        '<input type="text" ng-disabled="dateDisabled()" ng-class="{validationFailed : validationClass()}" id={{pickerid}} class="date-input" placeholder="{{placeholder}}" value="{{modelviewvalue}}">' +
         '<span class="date-input-icon"></span>' +
 
         '<div ng-show="showPicker" class="datepicker datepicker-dropdown">'+
@@ -128,6 +129,10 @@ function bzmDatePicker ($log, $document, $filter) {
 
     function link (scope, element, attrs, model) {
 
+        //console.dir(scope);
+        //console.dir(element);
+        //console.dir(attrs);
+        //console.dir(model);
         // update external representation when internal value change
         model.$formatters.unshift(function (date) {
 
@@ -223,12 +228,14 @@ function bzmDatePicker ($log, $document, $filter) {
             return today;
         };
 
+
         // update internal value of ng-model [external form is updated automatically through scope/watch]
         scope.setDate =  function(date){
 
             // if no date is provided take Today/NOW
-            if (!date) date = scope.today();
+            if (date == null) date = scope.today();
 
+                //console.log("date",date);
             // update date model through its scope
             scope.$apply(function() {
                     scope.ngModel = date;
@@ -441,6 +448,12 @@ function bzmDatePicker ($log, $document, $filter) {
                 return;
             }
 
+             // in case we have a reset button check it 1st
+            if (angelem.hasClass('reset')) {
+                scope.setDate("");
+                return;
+            }
+
             // search for closest element by tag to find which one was clicked
             var closestElemNg = scope.closest(angelem, ['SPAN','TD','TH']);
 
@@ -521,7 +534,7 @@ function bzmDatePicker ($log, $document, $filter) {
         // Minimal keystroke handling to close picker with ESC
         scope.keydown=  function(e){
 
-            console.log
+            //console.log
 
             switch(e.keyCode){
                 case 27: // escape
@@ -560,16 +573,25 @@ function bzmDatePicker ($log, $document, $filter) {
 
         scope.show = function(apply) {
 
+            //console.dir(1);
             // if not initial date provide one
             if (!scope.ngModel) {
+                //console.dir(2);
                 scope.ngModel = new Date();
             };
 
+            //console.dir(3);
             scope.update();
+            //console.dir(4);
             scope.place();
+            //console.dir(5);
             scope.viewMode = 0;
+            //console.dir(6);
             scope.showPicker = true;
+            //console.dir(7);
             $document.on('keydown',scope.keydown);
+            //console.dir(8);
+            //console.dir(apply);
 
             if (apply) scope.$apply();
         };
@@ -585,17 +607,60 @@ function bzmDatePicker ($log, $document, $filter) {
 
         // input field was selected
         scope.displayPicker = function (elem) {
-          if (!scope.picker) {
+            //console.dir(scope.picker)
+         //console.dir(1);
+           if (!scope.picker) {
+              //console.dir(scope.picker)
               return;
           }
-
-          if (!scope.showPicker) {
-              scope.bindevent(scope.picker);
+            //console.dir(2);
+            //console.dir(attrs.datefield);
+            if(attrs.datefield) {
+            	var obj=JSON.parse(attrs.datefield);
+            	//console.dir(obj.readonly);
+            	if(obj.readonly=="true")
+            		return;
+            }
+            //console.dir(4);
+            scope.showPicker=false;
+            if (!scope.showPicker) {
+                //console.dir(5)
+                scope.bindevent(scope.picker);
               scope.show();
           }
+            //console.dir(6);
+
         };
 
-        // bind mouse event
+        scope.dateDisabled=function(){
+        	//console.dir(attrs.datefield);
+        	if(attrs.datefield) {
+        		var obj=JSON.parse(attrs.datefield);
+        		//console.dir(obj.readonly);
+        		return (obj.readonly=="true");
+        	}
+        else
+        {
+        	//console.dir(attrs);
+            return false;
+        }
+    },
+    scope.validationClass=function(){
+        //console.dir(attrs);
+        if(attrs.datefield)  {
+        	var obj=JSON.parse(attrs.datefield);
+    		//console.dir(obj);
+    		//console.dir(obj.required);
+    		//console.dir(obj.required == "true");
+            return (obj.required == "true" || obj.required == true);
+        }
+        else {
+        	//console.dir(attrs.datefield);
+            return false;
+        }
+
+    },
+    // bind mouse event
         scope.bindevent = function (picker) {
 
             function mousedown(event) {
@@ -616,6 +681,20 @@ function bzmDatePicker ($log, $document, $filter) {
 
         // directive initialisation
         scope.init = function () {
+            /*scope.find('body', $document).on('click', function(e) {
+                var mainContent = scope.find('div.datepicker');
+                console.dir(mainContent);
+                if(mainContent.css('display') == 'block') {
+                    mainContent.css('display', 'none');
+                }
+            });
+
+            scope.find('div.date-display', $document).on('click', function(e) {
+                var mainContent = scope.find('div.datepicker');
+                console.dir(mainContent);
+                mainContent.css('display', 'block');
+                e.stopPropagation();
+            });*/
 
             //$log.log("picker ID=%s", attrs.id, "scope=", scope, "element=", element, ' model=', model, ' contoller-date=', scope.ngModel);
 
@@ -628,7 +707,7 @@ function bzmDatePicker ($log, $document, $filter) {
             scope.pickerid          = attrs.id || "date-picker-" + parseInt (Math.random() * 1000);
             scope.language          = attrs.language    || scope.locale || "en";
             scope.autohide          = attrs.autohide    || true;
-            scope.weekStart         = (isNaN(parseInt(attrs.weekstart)))?1: (parseInt(attrs.weekstart)) ; 
+            scope.weekStart         = (isNaN(parseInt(attrs.weekstart)))?1: (parseInt(attrs.weekstart)) ;
             scope.calendarWeeks     = attrs.weeknum     || false;
             scope.todayButton       = attrs.today       || false;
             scope.todayHighlight    = attrs.highlight   || true;
@@ -701,3 +780,17 @@ return {
         link: link          // pickadate object's methods
     };
 }
+
+$(document).ready(function() {
+    $('body').on('click', 'div.date-display', function(e) {
+        //var mainContent = scope.find('div.datepicker');
+        $('div.datepicker').css("display","none");
+        //console.log($(this));
+        var mainContent = $(this).closest(".bzm-date-picker").find('div.datepicker');
+        mainContent.css('display', 'block');
+        e.stopPropagation();
+    });
+    $('body').on('click',function(e) {
+        $('div.datepicker').css("display","none");
+    });
+})
